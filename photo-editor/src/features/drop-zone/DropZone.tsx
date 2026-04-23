@@ -55,6 +55,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ onImageLoaded, onError }) =>
     return (
         <Box
             sx={{
+                width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
