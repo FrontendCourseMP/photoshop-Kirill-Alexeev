@@ -25,7 +25,6 @@ export function decodeGB7(arrayBuffer: ArrayBuffer): { metadata: ImageMetadata; 
     const height = dataView.getUint16(offset, false);
     offset += 2;
 
-    const reserved = dataView.getUint16(offset, false);
     offset += 2;
 
     const pixelDataLength = width * height;

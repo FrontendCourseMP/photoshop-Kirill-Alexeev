@@ -6,14 +6,34 @@ import { DropZone } from '@features/drop-zone/DropZone';
 import { CanvasRenderer } from '@features/canvas-renderer/CanvasRenderer';
 import { StatusBar } from '@widgets/status-bar/StatusBar';
 import { ImageModel } from '@entities/image/model';
+import { useToast } from '@shared/ui/ToastContext';
 
 export const EditorPage: React.FC = () => {
     const [imageModel, setImageModel] = useState<ImageModel | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const { showToast } = useToast();
+
+    const handleError = (message: string) => {
+        showToast(message, 'error');
+    };
+
+    const handleImageLoaded = (model: ImageModel) => {
+        setImageModel(model);
+        showToast('Изображение успешно загружено', 'success');
+    };
 
     const handleClearImage = () => {
         setImageModel(null);
-        setError(null);
+        showToast('Холст очищен', 'info');
+    };
+
+    const handleDropNewImage = async (file: File) => {
+        try {
+            const { loadImageFromFile } = await import('@shared/lib/utils/loader');
+            const model = await loadImageFromFile(file);
+            handleImageLoaded(model);
+        } catch (err: any) {
+            handleError(`Ошибка загрузки: ${err?.message || 'Неизвестная ошибка'}`);
+        }
     };
 
     return (
@@ -21,9 +41,10 @@ export const EditorPage: React.FC = () => {
             <AppBar position="static">
                 <Toolbar>
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                        GrayBit-7 Editor
+                        PhotoEditor
                     </Typography>
-                    <Tooltip title="Новое изображение">
+
+                    <Tooltip title="Очистить холст">
                         <span>
                             <IconButton
                                 color="inherit"
@@ -34,48 +55,37 @@ export const EditorPage: React.FC = () => {
                             </IconButton>
                         </span>
                     </Tooltip>
+
                     <ImageSaver imageModel={imageModel} />
                 </Toolbar>
             </AppBar>
 
-
-            {error && (
-                <Typography color="error" sx={{ mb: 2 }}>
-                    {error}
-                </Typography>
-            )}
-
-            {imageModel ? (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        minHeight: 400,
-                        borderRadius: 1,
-                        p: 2,
-                        marginBottom: 4,
-                    }}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={async (e) => {
-                        e.preventDefault();
-                        const file = e.dataTransfer.files[0];
-                        if (!file) return;
-                        try {
-                            const { loadImageFromFile } = await import('@shared/lib/utils/loader');
-                            const model = await loadImageFromFile(file);
-                            setImageModel(model);
-                            setError(null);
-                        } catch (err) {
-                            setError((err as Error).message);
-                        }
-                    }}
-                >
-                    <CanvasRenderer imageModel={imageModel} />
-                </Box>
-            ) : (
-                <DropZone onImageLoaded={setImageModel} onError={(err) => setError(err.message)} />
-            )}
+            <Box sx={{ p: 3, flexGrow: 1 }}>
+                {imageModel ? (
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: '100%',
+                            minHeight: 400,
+                        }}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                            e.preventDefault();
+                            const file = e.dataTransfer.files[0];
+                            if (file) handleDropNewImage(file);
+                        }}
+                    >
+                        <CanvasRenderer imageModel={imageModel} />
+                    </Box>
+                ) : (
+                    <DropZone
+                        onImageLoaded={handleImageLoaded}
+                        onError={(err) => handleError(`Ошибка загрузки: ${err.message}`)}
+                    />
+                )}
+            </Box>
 
             <StatusBar imageModel={imageModel} />
         </Box>

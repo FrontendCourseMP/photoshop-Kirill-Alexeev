@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Button } from '@mui/material';
 import { loadImageFromFile } from '@shared/lib/utils/loader';
+import { ImageModel } from '@entities/image/model';
 
 interface ImageLoaderProps {
     onImageLoaded: (model: ImageModel) => void;
