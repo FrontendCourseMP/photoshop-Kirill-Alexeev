@@ -48,26 +48,34 @@ export class ImageModel {
         canvas.height = ph;
         const ctx = canvas.getContext('2d')!;
 
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = width;
-        tempCanvas.height = height;
-        const tempCtx = tempCanvas.getContext('2d')!;
-        tempCtx.putImageData(this._imageData, 0, 0);
-        ctx.drawImage(tempCanvas, 0, 0, pw, ph);
-        const scaledData = ctx.getImageData(0, 0, pw, ph);
+        const srcData = this._imageData.data;
 
         for (const ch of channels) {
             const preview = ctx.createImageData(pw, ph);
-            const src = scaledData.data;
             const dst = preview.data;
-            const idx = channels.indexOf(ch);
-            for (let i = 0; i < pw * ph; i++) {
-                const pixelOffset = i * 4;
-                const value = src[pixelOffset + idx];
-                dst[pixelOffset] = value;
-                dst[pixelOffset + 1] = value;
-                dst[pixelOffset + 2] = value;
-                dst[pixelOffset + 3] = 255;
+
+            let srcIdx: number;
+            if (ch === 'Gray') srcIdx = 0;
+            else if (ch === 'Alpha') srcIdx = 3;
+            else if (ch === 'R') srcIdx = 0;
+            else if (ch === 'G') srcIdx = 1;
+            else if (ch === 'B') srcIdx = 2;
+            else if (ch === 'A') srcIdx = 3;
+            else continue;
+
+            for (let y = 0; y < ph; y++) {
+                for (let x = 0; x < pw; x++) {
+                    const srcX = Math.floor(x / scale);
+                    const srcY = Math.floor(y / scale);
+                    const srcPixelIndex = (srcY * width + srcX) * 4;
+                    const value = srcData[srcPixelIndex + srcIdx];
+
+                    const dstIndex = (y * pw + x) * 4;
+                    dst[dstIndex] = value;
+                    dst[dstIndex + 1] = value;
+                    dst[dstIndex + 2] = value;
+                    dst[dstIndex + 3] = 255;
+                }
             }
             previews.push(preview);
         }

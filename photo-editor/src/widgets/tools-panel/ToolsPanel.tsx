@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import ColorizeIcon from '@mui/icons-material/Colorize';
-import PanToolIcon from '@mui/icons-material/PanTool';
 import { useEditorStore } from '@app/store/editorStore';
 
 export const ToolsPanel: React.FC = () => {
@@ -25,14 +24,6 @@ export const ToolsPanel: React.FC = () => {
                 >
                     <ColorizeIcon />
                 </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Перемещение" placement="right">
-                <span>
-                    <IconButton disabled>
-                        <PanToolIcon />
-                    </IconButton>
-                </span>
             </Tooltip>
         </Box>
     );
