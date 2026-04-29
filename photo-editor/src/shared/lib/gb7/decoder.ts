@@ -1,8 +1,9 @@
 import { ImageMetadata } from '@shared/types';
+import { ImageModel } from '@entities/image/model';
 
 const GB7_SIGNATURE = new Uint8Array([0x47, 0x42, 0x37, 0x1d]);
 
-export function decodeGB7(arrayBuffer: ArrayBuffer): { metadata: ImageMetadata; imageData: ImageData } {
+export function decodeGB7(arrayBuffer: ArrayBuffer): ImageModel {
     const dataView = new DataView(arrayBuffer);
     let offset = 0;
 
@@ -25,7 +26,7 @@ export function decodeGB7(arrayBuffer: ArrayBuffer): { metadata: ImageMetadata; 
     const height = dataView.getUint16(offset, false);
     offset += 2;
 
-    offset += 2;
+    offset += 2; // резерв
 
     const pixelDataLength = width * height;
     const expectedFileSize = 12 + pixelDataLength;
@@ -52,14 +53,16 @@ export function decodeGB7(arrayBuffer: ArrayBuffer): { metadata: ImageMetadata; 
         imageData.data[pixelIndex + 3] = maskBit ? 255 : 0;
     }
 
+    const colorDepth = hasMask ? 8 : 7;
+
     const metadata: ImageMetadata = {
         width,
         height,
-        colorDepth: 7,
+        colorDepth,
         format: 'gb7',
         hasMask,
         fileSize: arrayBuffer.byteLength,
     };
 
-    return { metadata, imageData };
+    return new ImageModel(metadata, imageData);
 }

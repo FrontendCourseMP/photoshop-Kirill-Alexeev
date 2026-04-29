@@ -25,8 +25,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({ imageModel }) => {
                 <Typography variant="body2">
                     Размер: {imageModel.metadata.width} x {imageModel.metadata.height} пикселей
                     | Глубина цвета: {imageModel.metadata.colorDepth} бит
-                    | Формат: {imageModel.metadata.format.toUpperCase()}
-                    | Размер файла: {(imageModel.metadata.fileSize! / 1024).toFixed(2)} КБ
+                    | Формат: {imageModel.metadata.format.toUpperCase()} | Размер файла: {(imageModel.metadata.fileSize! / 1024).toFixed(2)} КБ
                 </Typography>
             ) : (
                 <Typography variant="body2">Изображение не загружено</Typography>

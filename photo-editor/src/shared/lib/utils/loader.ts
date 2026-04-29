@@ -6,8 +6,7 @@ export async function loadImageFromFile(file: File): Promise<ImageModel> {
     const arrayBuffer = await file.arrayBuffer();
 
     if (fileExtension === 'gb7') {
-        const { metadata, imageData } = decodeGB7(arrayBuffer);
-        return new ImageModel(metadata, imageData);
+        return decodeGB7(arrayBuffer);
     } else {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -20,12 +19,22 @@ export async function loadImageFromFile(file: File): Promise<ImageModel> {
                 canvas.height = img.height;
                 const ctx = canvas.getContext('2d')!;
                 ctx.drawImage(img, 0, 0);
-
                 const imageData = ctx.getImageData(0, 0, img.width, img.height);
+
+                let hasAlpha = false;
+                const data = imageData.data;
+                for (let i = 3; i < data.length; i += 4) {
+                    if (data[i] !== 255) {
+                        hasAlpha = true;
+                        break;
+                    }
+                }
+                const colorDepth = hasAlpha ? 32 : 24;
+
                 const metadata = {
                     width: img.width,
                     height: img.height,
-                    colorDepth: 24,
+                    colorDepth,
                     format: fileExtension as 'png' | 'jpeg',
                     fileSize: arrayBuffer.byteLength,
                 };
