@@ -13,11 +13,7 @@ import { useToast } from '@shared/ui/ToastContext';
 import { useEditorStore } from '@app/store/editorStore';
 import { getCanvasPixelCoords } from '@shared/lib/utils/canvasCoords';
 import { rgbToCIELAB } from '@shared/lib/utils/conversions';
-
-const APPBAR_HEIGHT = 64;
-const STATUSBAR_HEIGHT = 36;
-const TOOLS_WIDTH = 48;
-const CHANNELS_WIDTH = 200;
+import { APPBAR_HEIGHT, STATUSBAR_HEIGHT, TOOLS_WIDTH, CHANNELS_WIDTH } from '@shared/constants/layout';
 
 export const EditorPage: React.FC = () => {
     const [imageModel, setImageModel] = useState<ImageModel | null>(null);
