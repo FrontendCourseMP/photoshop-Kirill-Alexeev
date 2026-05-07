@@ -106,13 +106,18 @@ export const EditorPage: React.FC = () => {
                         borderColor: 'divider',
                         bgcolor: 'background.paper',
                         zIndex: 1100,
-                        overflowY: 'auto',
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'flex-end',
                         p: 1,
+                        gap: 1,
                     }}
                 >
+                    <DropZone
+                        compact
+                        label="Загрузить изображение"
+                        onImageLoaded={handleImageLoaded}
+                        onError={(err) => handleError(`Ошибка загрузки: ${err.message}`)}
+                    />
                     <ChannelsPanel imageModel={imageModel} />
                 </Box>
             )}

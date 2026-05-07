@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Tooltip } from '@mui/material';
+import { IconButton, Menu, MenuItem, ListItemText, Tooltip } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
-import ImageIcon from '@mui/icons-material/Image';
-import DataObjectIcon from '@mui/icons-material/DataObject';
 import { ImageModel } from '@entities/image/model';
 import { ImageFormat } from '@shared/types';
 import { saveImage } from '@shared/lib/utils/saver';
@@ -53,21 +51,12 @@ export const ImageSaver: React.FC<ImageSaverProps> = ({ imageModel }) => {
                 onClose={handleClose}
             >
                 <MenuItem onClick={() => handleSave('png')}>
-                    <ListItemIcon>
-                        <ImageIcon fontSize="small" />
-                    </ListItemIcon>
                     <ListItemText>PNG</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleSave('jpeg')}>
-                    <ListItemIcon>
-                        <ImageIcon fontSize="small" />
-                    </ListItemIcon>
                     <ListItemText>JPEG</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleSave('gb7')}>
-                    <ListItemIcon>
-                        <DataObjectIcon fontSize="small" />
-                    </ListItemIcon>
                     <ListItemText>GB7 (GrayBit-7)</ListItemText>
                 </MenuItem>
             </Menu>
