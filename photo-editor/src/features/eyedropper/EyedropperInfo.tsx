@@ -25,10 +25,9 @@ export const EyedropperInfo: React.FC = () => {
                 flexDirection: 'row',
                 gap: 2,
                 alignItems: 'center',
-                maxWidth: 340,
+                maxWidth: 360,
             }}
         >
-            {/* Крупный квадрат выбранного цвета */}
             <Box
                 sx={{
                     width: colorBoxSize,
@@ -40,7 +39,7 @@ export const EyedropperInfo: React.FC = () => {
                     flexShrink: 0,
                 }}
             />
-            {/* Информация */}
+
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="subtitle2">
@@ -50,15 +49,55 @@ export const EyedropperInfo: React.FC = () => {
                         <CloseIcon fontSize="inherit" />
                     </IconButton>
                 </Box>
-                <Typography variant="body2">
-                    X: {data.x} &nbsp; Y: {data.y}
-                </Typography>
-                <Typography variant="body2">
-                    R: {data.r} &nbsp; G: {data.g} &nbsp; B: {data.b}
-                </Typography>
-                <Typography variant="body2">
-                    L*: {data.L.toFixed(1)} &nbsp; a*: {data.aStar.toFixed(1)} &nbsp; b*: {data.bStar.toFixed(1)}
-                </Typography>
+
+                <Box component="table" sx={{ border: 'none', borderCollapse: 'collapse', mt: 0.5 }}>
+                    <Box component="thead">
+                        <Box component="tr">
+                            <Box component="th" sx={{ width: 44, textAlign: 'center', fontWeight: 'normal' }}>X</Box>
+                            <Box component="th" sx={{ width: 44, textAlign: 'center', fontWeight: 'normal' }}>Y</Box>
+                        </Box>
+                    </Box>
+                    <Box component="tbody">
+                        <Box component="tr">
+                            <Box component="td" sx={{ width: 44, textAlign: 'center' }}>{data.x}</Box>
+                            <Box component="td" sx={{ width: 44, textAlign: 'center' }}>{data.y}</Box>
+                        </Box>
+                    </Box>
+                </Box>
+
+                <Box component="table" sx={{ border: 'none', borderCollapse: 'collapse', mt: 0.5 }}>
+                    <Box component="thead">
+                        <Box component="tr">
+                            <Box component="th" sx={{ width: 36, textAlign: 'center', fontWeight: 'normal' }}>R</Box>
+                            <Box component="th" sx={{ width: 36, textAlign: 'center', fontWeight: 'normal' }}>G</Box>
+                            <Box component="th" sx={{ width: 36, textAlign: 'center', fontWeight: 'normal' }}>B</Box>
+                        </Box>
+                    </Box>
+                    <Box component="tbody">
+                        <Box component="tr">
+                            <Box component="td" sx={{ width: 36, textAlign: 'center' }}>{data.r}</Box>
+                            <Box component="td" sx={{ width: 36, textAlign: 'center' }}>{data.g}</Box>
+                            <Box component="td" sx={{ width: 36, textAlign: 'center' }}>{data.b}</Box>
+                        </Box>
+                    </Box>
+                </Box>
+
+                <Box component="table" sx={{ border: 'none', borderCollapse: 'collapse', mt: 0.5 }}>
+                    <Box component="thead">
+                        <Box component="tr">
+                            <Box component="th" sx={{ width: 44, textAlign: 'center', fontWeight: 'normal' }}>L*</Box>
+                            <Box component="th" sx={{ width: 44, textAlign: 'center', fontWeight: 'normal' }}>a*</Box>
+                            <Box component="th" sx={{ width: 44, textAlign: 'center', fontWeight: 'normal' }}>b*</Box>
+                        </Box>
+                    </Box>
+                    <Box component="tbody">
+                        <Box component="tr">
+                            <Box component="td" sx={{ width: 44, textAlign: 'center' }}>{data.L.toFixed(1)}</Box>
+                            <Box component="td" sx={{ width: 44, textAlign: 'center' }}>{data.aStar.toFixed(1)}</Box>
+                            <Box component="td" sx={{ width: 44, textAlign: 'center' }}>{data.bStar.toFixed(1)}</Box>
+                        </Box>
+                    </Box>
+                </Box>
             </Box>
         </Paper>
     );

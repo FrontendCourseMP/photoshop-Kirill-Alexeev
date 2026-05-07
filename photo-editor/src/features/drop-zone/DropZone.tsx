@@ -72,6 +72,9 @@ export const DropZone: React.FC<DropZoneProps> = ({
                     textAlign: 'center',
                     width: '100%',
                     opacity: isLoading ? 0.7 : 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
                 }}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -89,7 +92,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
                 />
                 {isLoading ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <CircularProgress size={24} sx={{ mb: 0.5 }} />
+                        <CircularProgress color='primary' size={32} thickness={2} sx={{ mb: 0.5 }} />
                         <Typography variant="caption">Загрузка...</Typography>
                     </Box>
                 ) : (
