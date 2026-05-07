@@ -39,7 +39,7 @@ export class ImageModel {
         const { width, height } = this._metadata;
         const channels = this.channels;
         const previews: ImageData[] = [];
-        const scale = Math.min(1, maxSize / Math.max(width, height));
+        const scale = Math.min(maxSize / width, maxSize / height);
         const pw = Math.max(1, Math.floor(width * scale));
         const ph = Math.max(1, Math.floor(height * scale));
 

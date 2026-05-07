@@ -8,9 +8,17 @@ export async function saveImage(model: ImageModel, format: ImageFormat): Promise
     let fileName: string;
 
     if (format === 'gb7') {
-        const arrayBuffer = encodeGB7(imageData, metadata.hasMask || false);
+        let hasMask = false;
+        const data = imageData.data;
+        for (let i = 3; i < data.length; i += 4) {
+            if (data[i] < 255) {
+                hasMask = true;
+                break;
+            }
+        }
+        const arrayBuffer = encodeGB7(imageData, hasMask);
         blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
-        fileName = `image.gb7`;
+        fileName = 'image.gb7';
     } else {
         const canvas = document.createElement('canvas');
         canvas.width = metadata.width;

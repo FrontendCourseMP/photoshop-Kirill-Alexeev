@@ -46,10 +46,12 @@ export const ChannelsPanel: React.FC<ChannelsPanelProps> = ({ imageModel }) => {
                                     src={dataUrl}
                                     alt={channel}
                                     sx={{
-                                        width: 48,
                                         height: 48,
+                                        width: 'auto',
+                                        maxWidth: 64,
                                         border: '1px solid #999',
                                         filter: visible ? 'none' : 'grayscale(100%)',
+                                        objectFit: 'contain',
                                     }}
                                 />
                                 <Typography variant="caption">{channel}</Typography>
