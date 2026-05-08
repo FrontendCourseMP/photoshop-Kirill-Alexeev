@@ -1,4 +1,3 @@
-// src/features/canvas-renderer/CanvasRenderer.tsx
 import React, { useRef, useEffect, useMemo } from 'react';
 import { ImageModel } from '@entities/image/model';
 import { useEditorStore } from '@app/store/editorStore';
@@ -13,8 +12,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCa
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const channelVisibility = useEditorStore((s) => s.channelVisibility);
     const levelsPreview = useEditorStore((s) => s.levelsPreview);
+    const masterPreviewImageData = useEditorStore((s) => s.masterPreviewImageData);
 
-    // 1. Фильтрация по каналам
     const filteredImageData = useMemo(() => {
         const src = imageModel.imageData.data;
         const newData = new Uint8ClampedArray(src);
@@ -42,16 +41,21 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCa
         return new ImageData(newData, imageModel.metadata.width, imageModel.metadata.height);
     }, [imageModel, channelVisibility]);
 
-    // 2. Применение Levels предпросмотра (если есть)
     const finalImageData = useMemo(() => {
-        if (!levelsPreview) return filteredImageData;
-        return applyLevelsToImageData(
-            filteredImageData,
-            levelsPreview.channel,
-            levelsPreview.levels,
-            levelsPreview.maxValue
-        );
-    }, [filteredImageData, levelsPreview]);
+        if (masterPreviewImageData) {
+            return masterPreviewImageData;
+        }
+
+        if (levelsPreview) {
+            return applyLevelsToImageData(
+                filteredImageData,
+                levelsPreview.channel,
+                levelsPreview.levels,
+                levelsPreview.maxValue
+            );
+        }
+        return filteredImageData;
+    }, [filteredImageData, levelsPreview, masterPreviewImageData]);
 
     useEffect(() => {
         if (!canvasRef.current) return;

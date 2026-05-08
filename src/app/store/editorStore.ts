@@ -28,6 +28,7 @@ interface EditorState {
     channelVisibility: ChannelVisibility;
     eyedropperData: EyedropperData | null;
     levelsPreview: LevelsPreview | null;
+    masterPreviewImageData: ImageData | null;
 
     setCurrentTool: (tool: ToolType) => void;
     setChannelVisibility: (channel: string, visible: boolean) => void;
@@ -35,6 +36,8 @@ interface EditorState {
     setEyedropperData: (data: EyedropperData | null) => void;
     setLevelsPreview: (preview: LevelsPreview | null) => void;
     clearLevelsPreview: () => void;
+    setMasterPreviewImageData: (data: ImageData | null) => void;
+    clearMasterPreview: () => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -42,6 +45,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     channelVisibility: {},
     eyedropperData: null,
     levelsPreview: null,
+    masterPreviewImageData: null,
 
     setCurrentTool: (tool) => set({ currentTool: tool }),
     setChannelVisibility: (channel, visible) =>
@@ -59,4 +63,6 @@ export const useEditorStore = create<EditorState>((set) => ({
     setEyedropperData: (data) => set({ eyedropperData: data }),
     setLevelsPreview: (preview) => set({ levelsPreview: preview }),
     clearLevelsPreview: () => set({ levelsPreview: null }),
+    setMasterPreviewImageData: (data) => set({ masterPreviewImageData: data }),
+    clearMasterPreview: () => set({ masterPreviewImageData: null }),
 }));
