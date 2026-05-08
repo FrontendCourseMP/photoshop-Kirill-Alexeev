@@ -63,6 +63,8 @@ export class ImageModel {
             else if (ch === 'A') srcIdx = 3;
             else continue;
 
+            const isAlphaChannel = (ch === 'A' || ch === 'Alpha');
+
             for (let y = 0; y < ph; y++) {
                 for (let x = 0; x < pw; x++) {
                     const srcX = Math.floor(x / scale);
@@ -71,10 +73,17 @@ export class ImageModel {
                     const value = srcData[srcPixelIndex + srcIdx];
 
                     const dstIndex = (y * pw + x) * 4;
-                    dst[dstIndex] = value;
-                    dst[dstIndex + 1] = value;
-                    dst[dstIndex + 2] = value;
-                    dst[dstIndex + 3] = 255;
+                    if (isAlphaChannel) {
+                        dst[dstIndex] = 0;
+                        dst[dstIndex + 1] = 0;
+                        dst[dstIndex + 2] = 0;
+                        dst[dstIndex + 3] = value;
+                    } else {
+                        dst[dstIndex] = value;
+                        dst[dstIndex + 1] = value;
+                        dst[dstIndex + 2] = value;
+                        dst[dstIndex + 3] = 255;
+                    }
                 }
             }
             previews.push(preview);
