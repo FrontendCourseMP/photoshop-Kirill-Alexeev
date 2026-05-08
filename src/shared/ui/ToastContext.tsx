@@ -29,7 +29,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
-            <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}
+            <Snackbar open={open} autoHideDuration={3000} onClose={handleClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
                 <Alert onClose={handleClose} severity={toast?.severity} sx={{ width: '100%' }} variant="filled">
                     {toast?.message}
