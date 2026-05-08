@@ -1,6 +1,15 @@
+// src/app/EditorPage.tsx (путь может отличаться, например src/pages/editor/EditorPage.tsx)
 import React, { useState } from 'react';
-import { Box, AppBar, Toolbar, Typography, IconButton, Tooltip } from '@mui/material';
+import {
+    Box,
+    AppBar,
+    Toolbar,
+    Typography,
+    IconButton,
+    Tooltip,
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+
 import { ImageSaver } from '@features/image-saver/ImageSaver';
 import { DropZone } from '@features/drop-zone/DropZone';
 import { CanvasRenderer } from '@features/canvas-renderer/CanvasRenderer';
@@ -8,34 +17,49 @@ import { StatusBar } from '@widgets/status-bar/StatusBar';
 import { ToolsPanel } from '@widgets/tools-panel/ToolsPanel';
 import { ChannelsPanel } from '@features/channels-panel/ChannelsPanel';
 import { EyedropperInfo } from '@features/eyedropper/EyedropperInfo';
+import { LevelsDialog } from '@features/levels/LevelsDialog';
+
 import { ImageModel } from '@entities/image/model';
 import { useToast } from '@shared/ui/ToastContext';
 import { useEditorStore } from '@app/store/editorStore';
 import { getCanvasPixelCoords } from '@shared/lib/utils/canvasCoords';
 import { rgbToCIELAB } from '@shared/lib/utils/conversions';
-import { APPBAR_HEIGHT, STATUSBAR_HEIGHT, TOOLS_WIDTH, CHANNELS_WIDTH } from '@shared/constants/layout';
+import {
+    APPBAR_HEIGHT,
+    STATUSBAR_HEIGHT,
+    TOOLS_WIDTH,
+    CHANNELS_WIDTH,
+} from '@shared/constants/layout';
 
 export const EditorPage: React.FC = () => {
     const [imageModel, setImageModel] = useState<ImageModel | null>(null);
+    const [showLevels, setShowLevels] = useState(false);
     const { showToast } = useToast();
+
     const currentTool = useEditorStore((s) => s.currentTool);
     const setEyedropperData = useEditorStore((s) => s.setEyedropperData);
     const resetChannelVisibility = useEditorStore((s) => s.resetChannelVisibility);
 
+    // Обработчик ошибок
     const handleError = (message: string) => showToast(message, 'error');
 
+    // Загрузка изображения (из DropZone или drag&drop)
     const handleImageLoaded = (model: ImageModel) => {
         setImageModel(model);
         resetChannelVisibility(model.channels);
+        setShowLevels(false);
         showToast('Изображение успешно загружено', 'success');
     };
 
+    // Очистка холста
     const handleClearImage = () => {
         setImageModel(null);
         setEyedropperData(null);
+        setShowLevels(false);
         showToast('Холст очищен', 'info');
     };
 
+    // Drag&Drop поверх существующего изображения
     const handleDropNewImage = async (file: File) => {
         try {
             const { loadImageFromFile } = await import('@shared/lib/utils/loader');
@@ -46,6 +70,7 @@ export const EditorPage: React.FC = () => {
         }
     };
 
+    // Клик по холсту для пипетки
     const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
         if (currentTool !== 'eyedropper' || !imageModel) return;
         const canvas = e.currentTarget;
@@ -56,11 +81,30 @@ export const EditorPage: React.FC = () => {
         const pixel = ctx.getImageData(coords.x, coords.y, 1, 1).data;
         const [r, g, b] = pixel;
         const lab = rgbToCIELAB(r, g, b);
-        setEyedropperData({ x: coords.x, y: coords.y, r, g, b, L: lab.L, aStar: lab.a, bStar: lab.b });
+        setEyedropperData({
+            x: coords.x,
+            y: coords.y,
+            r,
+            g,
+            b,
+            L: lab.L,
+            aStar: lab.a,
+            bStar: lab.b,
+        });
+    };
+
+    // Применение результата Levels
+    const handleApplyLevels = (newImageData: ImageData) => {
+        if (!imageModel) return;
+        const newModel = new ImageModel(imageModel.metadata, newImageData);
+        setImageModel(newModel);
+        setShowLevels(false);
+        showToast('Уровни применены', 'success');
     };
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            {/* Верхний AppBar */}
             <AppBar position="fixed" sx={{ zIndex: 1300 }}>
                 <Toolbar>
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
@@ -77,6 +121,7 @@ export const EditorPage: React.FC = () => {
                 </Toolbar>
             </AppBar>
 
+            {/* Левая фиксированная панель инструментов */}
             <Box
                 sx={{
                     position: 'fixed',
@@ -91,9 +136,10 @@ export const EditorPage: React.FC = () => {
                     overflowY: 'auto',
                 }}
             >
-                <ToolsPanel />
+                <ToolsPanel onOpenLevels={() => setShowLevels(true)} />
             </Box>
 
+            {/* Правая фиксированная панель (загрузка + каналы) */}
             {imageModel && (
                 <Box
                     sx={{
@@ -114,7 +160,7 @@ export const EditorPage: React.FC = () => {
                 >
                     <DropZone
                         compact
-                        label="Загрузить изображение"
+                        label="Загрузить другое"
                         onImageLoaded={handleImageLoaded}
                         onError={(err) => handleError(`Ошибка загрузки: ${err.message}`)}
                     />
@@ -122,6 +168,7 @@ export const EditorPage: React.FC = () => {
                 </Box>
             )}
 
+            {/* Центральная область с холстом или DropZone */}
             <Box
                 sx={{
                     marginTop: `${APPBAR_HEIGHT}px`,
@@ -155,20 +202,30 @@ export const EditorPage: React.FC = () => {
                         <CanvasRenderer imageModel={imageModel} onCanvasClick={handleCanvasClick} />
                     </Box>
                 ) : (
-                    <Box sx={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        <DropZone
-                            onImageLoaded={handleImageLoaded}
-                            onError={(err) => handleError(`Ошибка загрузки: ${err.message}`)}
-                        />
-                    </Box>
+                    <DropZone
+                        onImageLoaded={handleImageLoaded}
+                        onError={(err) => handleError(`Ошибка загрузки: ${err.message}`)}
+                    />
                 )}
             </Box>
 
+            {/* Статус-бар */}
             <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1300 }}>
                 <StatusBar imageModel={imageModel} />
             </Box>
 
+            {/* Окно пипетки */}
             <EyedropperInfo />
+
+            {/* Диалог уровней */}
+            {imageModel && (
+                <LevelsDialog
+                    open={showLevels}
+                    imageModel={imageModel}
+                    onApply={handleApplyLevels}
+                    onClose={() => setShowLevels(false)}
+                />
+            )}
         </Box>
     );
 };

@@ -1,12 +1,17 @@
+// src/widgets/tools-panel/ToolsPanel.tsx
 import React from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import ColorizeIcon from '@mui/icons-material/Colorize';
+import TuneIcon from '@mui/icons-material/Tune';
 import { useEditorStore } from '@app/store/editorStore';
 
-export const ToolsPanel: React.FC = () => {
+interface ToolsPanelProps {
+    onOpenLevels?: () => void;
+}
+
+export const ToolsPanel: React.FC<ToolsPanelProps> = ({ onOpenLevels }) => {
     const currentTool = useEditorStore((s) => s.currentTool);
     const setCurrentTool = useEditorStore((s) => s.setCurrentTool);
-
     const isEyedropperActive = currentTool === 'eyedropper';
 
     return (
@@ -15,14 +20,20 @@ export const ToolsPanel: React.FC = () => {
                 <IconButton
                     onClick={() => setCurrentTool(isEyedropperActive ? null : 'eyedropper')}
                     sx={{
-                        bgcolor: isEyedropperActive ? 'action.selected' : 'transparent',
-                        color: 'action.active',
+                        bgcolor: isEyedropperActive ? 'primary.main' : 'transparent',
+                        color: isEyedropperActive ? 'white' : 'action.active',
                         '&:hover': {
-                            bgcolor: isEyedropperActive ? 'action.selected' : 'action.hover',
+                            bgcolor: isEyedropperActive ? 'primary.dark' : 'action.hover',
                         },
                     }}
                 >
                     <ColorizeIcon />
+                </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Уровни" placement="right">
+                <IconButton onClick={onOpenLevels}>
+                    <TuneIcon />
                 </IconButton>
             </Tooltip>
         </Box>

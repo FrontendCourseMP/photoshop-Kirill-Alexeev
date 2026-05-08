@@ -1,6 +1,8 @@
+// src/features/canvas-renderer/CanvasRenderer.tsx
 import React, { useRef, useEffect, useMemo } from 'react';
 import { ImageModel } from '@entities/image/model';
 import { useEditorStore } from '@app/store/editorStore';
+import { applyLevelsToImageData } from '@shared/lib/utils/applyLevels';
 
 interface CanvasRendererProps {
     imageModel: ImageModel;
@@ -10,7 +12,9 @@ interface CanvasRendererProps {
 export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCanvasClick }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const channelVisibility = useEditorStore((s) => s.channelVisibility);
+    const levelsPreview = useEditorStore((s) => s.levelsPreview);
 
+    // 1. Фильтрация по каналам
     const filteredImageData = useMemo(() => {
         const src = imageModel.imageData.data;
         const newData = new Uint8ClampedArray(src);
@@ -21,19 +25,15 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCa
                 const channel = channels[chIdx];
                 const visible = channelVisibility[channel] !== false;
 
-                if (channel === 'Gray') {
-                    if (!visible) {
-                        newData[i] = 0;     // R
-                        newData[i + 1] = 0; // G
-                        newData[i + 2] = 0; // B
-                    }
-                } else if (channel === 'R' || channel === 'G' || channel === 'B') {
-                    if (!visible) {
+                if (!visible) {
+                    if (channel === 'Gray') {
+                        newData[i] = 0;
+                        newData[i + 1] = 0;
+                        newData[i + 2] = 0;
+                    } else if (channel === 'R' || channel === 'G' || channel === 'B') {
                         const offset = channel === 'R' ? 0 : channel === 'G' ? 1 : 2;
                         newData[i + offset] = 0;
-                    }
-                } else if (channel === 'A' || channel === 'Alpha') {
-                    if (!visible) {
+                    } else if (channel === 'A' || channel === 'Alpha') {
                         newData[i + 3] = 255;
                     }
                 }
@@ -42,14 +42,25 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCa
         return new ImageData(newData, imageModel.metadata.width, imageModel.metadata.height);
     }, [imageModel, channelVisibility]);
 
+    // 2. Применение Levels предпросмотра (если есть)
+    const finalImageData = useMemo(() => {
+        if (!levelsPreview) return filteredImageData;
+        return applyLevelsToImageData(
+            filteredImageData,
+            levelsPreview.channel,
+            levelsPreview.levels,
+            levelsPreview.maxValue
+        );
+    }, [filteredImageData, levelsPreview]);
+
     useEffect(() => {
         if (!canvasRef.current) return;
         const canvas = canvasRef.current;
         canvas.width = imageModel.metadata.width;
         canvas.height = imageModel.metadata.height;
         const ctx = canvas.getContext('2d')!;
-        ctx.putImageData(filteredImageData, 0, 0);
-    }, [filteredImageData, imageModel]);
+        ctx.putImageData(finalImageData, 0, 0);
+    }, [finalImageData, imageModel]);
 
     return (
         <canvas
