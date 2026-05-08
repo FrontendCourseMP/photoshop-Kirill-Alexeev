@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormControlLabel, Checkbox, Typography } from '@mui/material';
+import { Checkbox, FormControlLabel } from '@mui/material';
 
 interface Props {
     checked: boolean;
@@ -12,10 +12,15 @@ export const PreviewCheckbox: React.FC<Props> = ({ checked, onChange }) => (
             <Checkbox
                 size="small"
                 checked={checked}
-                onChange={e => onChange(e.target.checked)}
-                sx={{ color: 'primary.light', '&.Mui-checked': { color: 'primary.main' } }}
+                onChange={(e) => onChange(e.target.checked)}
+                sx={{
+                    color: 'grey.300',
+                    '&.Mui-checked': {
+                        color: 'grey.300',
+                    },
+                }}
             />
         }
-        label={<Typography variant="caption">Предпросмотр</Typography>}
+        label="Предпросмотр"
     />
 );

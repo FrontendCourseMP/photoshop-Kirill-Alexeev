@@ -13,6 +13,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCa
     const channelVisibility = useEditorStore((s) => s.channelVisibility);
     const levelsPreview = useEditorStore((s) => s.levelsPreview);
     const masterPreviewImageData = useEditorStore((s) => s.masterPreviewImageData);
+    const currentTool = useEditorStore((s) => s.currentTool);
 
     const filteredImageData = useMemo(() => {
         const src = imageModel.imageData.data;
@@ -42,10 +43,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCa
     }, [imageModel, channelVisibility]);
 
     const finalImageData = useMemo(() => {
-        if (masterPreviewImageData) {
-            return masterPreviewImageData;
-        }
-
+        if (masterPreviewImageData) return masterPreviewImageData;
         if (levelsPreview) {
             return applyLevelsToImageData(
                 filteredImageData,
@@ -66,6 +64,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCa
         ctx.putImageData(finalImageData, 0, 0);
     }, [finalImageData, imageModel]);
 
+    const cursorStyle = currentTool === 'eyedropper' ? 'crosshair' : 'default';
+
     return (
         <canvas
             ref={canvasRef}
@@ -74,6 +74,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCa
                 maxHeight: '100%',
                 objectFit: 'contain',
                 border: '1px solid #ccc',
+                cursor: cursorStyle,
             }}
             onClick={onCanvasClick}
         />
