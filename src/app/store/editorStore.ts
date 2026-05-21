@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import { InterpolationMethod } from '@shared/lib/utils/interpolation';
 
-export type ToolType = 'select' | 'eyedropper' | 'pencil' | 'eraser' | null;
+export type ToolType = 'select' | 'eyedropper' | 'pencil' | 'eraser' | 'hand' | null;
 
 interface ChannelVisibility {
     [channelName: string]: boolean;
@@ -29,6 +30,9 @@ interface EditorState {
     eyedropperData: EyedropperData | null;
     levelsPreview: LevelsPreview | null;
     masterPreviewImageData: ImageData | null;
+    zoom: number;
+    interpolationMethod: InterpolationMethod;
+    pan: { x: number; y: number };
 
     setCurrentTool: (tool: ToolType) => void;
     setChannelVisibility: (channel: string, visible: boolean) => void;
@@ -38,6 +42,9 @@ interface EditorState {
     clearLevelsPreview: () => void;
     setMasterPreviewImageData: (data: ImageData | null) => void;
     clearMasterPreview: () => void;
+    setZoom: (zoom: number) => void;
+    setInterpolationMethod: (method: InterpolationMethod) => void;
+    setPan: (pan: { x: number; y: number }) => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -46,6 +53,9 @@ export const useEditorStore = create<EditorState>((set) => ({
     eyedropperData: null,
     levelsPreview: null,
     masterPreviewImageData: null,
+    zoom: 100,
+    interpolationMethod: 'bilinear',
+    pan: { x: 0, y: 0 },
 
     setCurrentTool: (tool) => set({ currentTool: tool }),
     setChannelVisibility: (channel, visible) =>
@@ -65,4 +75,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     clearLevelsPreview: () => set({ levelsPreview: null }),
     setMasterPreviewImageData: (data) => set({ masterPreviewImageData: data }),
     clearMasterPreview: () => set({ masterPreviewImageData: null }),
+    setZoom: (zoom) => set({ zoom }),
+    setInterpolationMethod: (method) => set({ interpolationMethod: method }),
+    setPan: (pan) => set({ pan }),
 }));

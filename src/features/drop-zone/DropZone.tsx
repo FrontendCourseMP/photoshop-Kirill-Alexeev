@@ -74,7 +74,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
                     opacity: isLoading ? 0.7 : 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center'
+                    alignItems: 'center',
                 }}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
