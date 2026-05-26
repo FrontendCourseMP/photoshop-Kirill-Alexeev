@@ -37,6 +37,8 @@ export const EditorPage: React.FC = () => {
     const currentTool = useEditorStore(s => s.currentTool);
     const setEyedropperData = useEditorStore(s => s.setEyedropperData);
 
+    const zoom = useEditorStore(s => s.zoom);
+
     const handleError = (message: string) => showToast(message, 'error');
 
     const handleApplyLevels = (newImageData: ImageData) => {
@@ -55,11 +57,16 @@ export const EditorPage: React.FC = () => {
     const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
         if (currentTool !== 'eyedropper' || !imageModel) return;
         const canvas = e.currentTarget;
-        const coords = getCanvasPixelCoords(canvas, e.clientX, e.clientY);
+
+        const coords = getCanvasPixelCoords(canvas, e.clientX, e.clientY, zoom); // убрали pan
         if (!coords) return;
+
         const { x, y } = coords;
         const originalData = imageModel.imageData.data;
         const pixelIndex = (y * imageModel.metadata.width + x) * 4;
+
+        if (pixelIndex < 0 || pixelIndex + 3 >= originalData.length) return;
+
         const r = originalData[pixelIndex];
         const g = originalData[pixelIndex + 1];
         const b = originalData[pixelIndex + 2];
