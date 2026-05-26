@@ -58,7 +58,7 @@ export const EditorPage: React.FC = () => {
         if (currentTool !== 'eyedropper' || !imageModel) return;
         const canvas = e.currentTarget;
 
-        const coords = getCanvasPixelCoords(canvas, e.clientX, e.clientY, zoom); // убрали pan
+        const coords = getCanvasPixelCoords(canvas, e.clientX, e.clientY, zoom);
         if (!coords) return;
 
         const { x, y } = coords;
@@ -118,7 +118,9 @@ export const EditorPage: React.FC = () => {
                 )}
             </Box>
 
-            <StatusBar imageModel={imageModel} />
+            <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1300 }}>
+                <StatusBar imageModel={imageModel} />
+            </Box>
             <EyedropperInfo />
 
             {imageModel && (

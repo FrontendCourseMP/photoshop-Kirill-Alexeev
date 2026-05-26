@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Box } from '@mui/material';
-import { CanvasRenderer } from '@features/canvas/CanvasRenderer';
+import { CanvasRenderer } from './CanvasRenderer';
 import { useEditorStore } from '@app/store/editorStore';
 import { ImageModel } from '@entities/image/model';
 
@@ -48,7 +48,6 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({ imageModel, onCa
         };
     }, [isPanning, handleMouseMove, handleMouseUp]);
 
-    // Определяем курсор в зависимости от инструмента
     const cursor =
         currentTool === 'eyedropper' ? 'crosshair' :
             currentTool === 'hand' ? (isPanning ? 'grabbing' : 'grab') :
@@ -62,6 +61,7 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({ imageModel, onCa
                 height: '100%',
                 overflow: 'hidden',
                 position: 'relative',
+                cursor: cursor,
             }}
             onMouseDown={handleMouseDown}
         >
@@ -69,13 +69,13 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({ imageModel, onCa
                 sx={{
                     transform: `translate(${pan.x}px, ${pan.y}px)`,
                     display: 'inline-block',
-                    cursor: cursor,           // курсор действует и на холст
+                    transformOrigin: 'top left',
                 }}
             >
                 <CanvasRenderer
                     imageModel={imageModel}
                     onCanvasClick={onCanvasClick}
-                    cursor={cursor}           // прокидываем в CanvasRenderer
+                    cursor={cursor}
                 />
             </Box>
         </Box>

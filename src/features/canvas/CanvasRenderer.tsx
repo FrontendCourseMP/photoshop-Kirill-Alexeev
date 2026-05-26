@@ -10,7 +10,11 @@ interface CanvasRendererProps {
     cursor?: string;
 }
 
-export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCanvasClick, cursor: cursorProp, }) => {
+export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
+    imageModel,
+    onCanvasClick,
+    cursor: cursorProp,
+}) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const channelVisibility = useEditorStore((s) => s.channelVisibility);
     const levelsPreview = useEditorStore((s) => s.levelsPreview);
@@ -82,9 +86,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({ imageModel, onCa
         <canvas
             ref={canvasRef}
             style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
+                display: 'block',
                 border: '1px solid #ccc',
                 cursor: cursorStyle,
             }}

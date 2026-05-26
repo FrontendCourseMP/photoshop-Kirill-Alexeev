@@ -38,29 +38,19 @@ const dialogSx = {
 
 const lightInputStyles = {
     '& .MuiOutlinedInput-root': {
-        '& fieldset': {
-            borderColor: '#e0e0e0',               // светлая рамка по умолчанию
-        },
-        '&:hover fieldset': {
-            borderColor: '#bdbdbd',               // чуть темнее при наведении
-        },
-        '&.Mui-focused fieldset': {
-            borderColor: '#90caf9',               // светло‑голубая рамка в фокусе
-        },
+        '& fieldset': { borderColor: '#e0e0e0' },
+        '&:hover fieldset': { borderColor: '#bdbdbd' },
+        '&.Mui-focused fieldset': { borderColor: '#90caf9' },
     },
     '& .MuiInputLabel-root': {
-        color: '#9e9e9e',                         // светло‑серый лейбл
-        '&.Mui-focused': {
-            color: '#90caf9',                     // светло‑голубой лейбл в фокусе
-        },
+        color: '#9e9e9e',
+        '&.Mui-focused': { color: '#90caf9' },
     },
 };
 
 const lightCheckboxStyles = {
-    color: '#bdbdbd',                             // светло‑серая рамка по умолчанию
-    '&.Mui-checked': {
-        color: '#ffffff',                         // белая галочка и рамка при активации
-    },
+    color: '#bdbdbd',
+    '&.Mui-checked': { color: '#ffffff' },
 };
 
 export const ResizeDialog: React.FC<ResizeDialogProps> = ({ open, imageModel, onResized, onClose }) => {
@@ -68,12 +58,11 @@ export const ResizeDialog: React.FC<ResizeDialogProps> = ({ open, imageModel, on
     const currentHeight = imageModel.metadata.height;
     const currentMp = ((currentWidth * currentHeight) / 1_000_000).toFixed(2);
 
-    const [unit, setUnit] = useState<'percent' | 'pixels'>('pixels');
-    const [width, setWidth] = useState<number>(currentWidth);
-    const [height, setHeight] = useState<number>(currentHeight);
+    const [unit, setUnit] = useState<'pixels' | 'percent'>('pixels');
+    const [targetWidth, setTargetWidth] = useState<number>(currentWidth);
+    const [targetHeight, setTargetHeight] = useState<number>(currentHeight);
     const [keepProportions, setKeepProportions] = useState(true);
     const [method, setMethod] = useState<InterpolationMethod>('bilinear');
-
     const [errors, setErrors] = useState<{ width?: string; height?: string }>({});
 
     const maxDim = 10000;
@@ -88,49 +77,65 @@ export const ResizeDialog: React.FC<ResizeDialogProps> = ({ open, imageModel, on
 
     useEffect(() => {
         if (!open) return;
-        setWidth(currentWidth);
-        setHeight(currentHeight);
+        setTargetWidth(currentWidth);
+        setTargetHeight(currentHeight);
         setUnit('pixels');
         setKeepProportions(true);
         setMethod(useEditorStore.getState().interpolationMethod);
     }, [open, currentWidth, currentHeight]);
 
-    const handleWidthChange = (value: number) => {
-        setWidth(value);
-        if (keepProportions) {
-            const ratio = currentHeight / currentWidth;
-            setHeight(Math.round(value * ratio));
+    const displayWidth = unit === 'percent' ? Math.round((targetWidth / currentWidth) * 100) : targetWidth;
+    const displayHeight = unit === 'percent' ? Math.round((targetHeight / currentHeight) * 100) : targetHeight;
+
+    const handleWidthChange = (inputValue: number) => {
+        if (isNaN(inputValue)) return;
+        let newWidth: number;
+        if (unit === 'percent') {
+            newWidth = Math.round((inputValue / 100) * currentWidth);
+        } else {
+            newWidth = inputValue;
         }
-        validate(value, height);
+        newWidth = Math.min(maxDim, Math.max(1, newWidth));
+        setTargetWidth(newWidth);
+        if (keepProportions) {
+            const newHeight = Math.round((newWidth / currentWidth) * currentHeight);
+            setTargetHeight(newHeight);
+        }
+        validate(newWidth, targetHeight);
     };
 
-    const handleHeightChange = (value: number) => {
-        setHeight(value);
-        if (keepProportions) {
-            const ratio = currentWidth / currentHeight;
-            setWidth(Math.round(value * ratio));
+    const handleHeightChange = (inputValue: number) => {
+        if (isNaN(inputValue)) return;
+        let newHeight: number;
+        if (unit === 'percent') {
+            newHeight = Math.round((inputValue / 100) * currentHeight);
+        } else {
+            newHeight = inputValue;
         }
-        validate(width, value);
+        newHeight = Math.min(maxDim, Math.max(1, newHeight));
+        setTargetHeight(newHeight);
+        if (keepProportions) {
+            const newWidth = Math.round((newHeight / currentHeight) * currentWidth);
+            setTargetWidth(newWidth);
+        }
+        validate(targetWidth, newHeight);
+    };
+
+    const handleUnitChange = (newUnit: 'pixels' | 'percent') => {
+        setUnit(newUnit);
     };
 
     const handleApply = () => {
-        const w = unit === 'percent' ? Math.round(currentWidth * width / 100) : width;
-        const h = unit === 'percent' ? Math.round(currentHeight * height / 100) : height;
-        if (!validate(w, h)) return;
-
-        const newImageData = resample(imageModel.imageData, w, h, method);
+        if (!validate(targetWidth, targetHeight)) return;
+        const newImageData = resample(imageModel.imageData, targetWidth, targetHeight, method);
         const newModel = new ImageModel(imageModel.metadata, newImageData);
-        newModel.metadata.width = w;
-        newModel.metadata.height = h;
+        newModel.metadata.width = targetWidth;
+        newModel.metadata.height = targetHeight;
         onResized(newModel);
         onClose();
     };
 
-    const newMp = (() => {
-        const w = unit === 'percent' ? Math.round(currentWidth * width / 100) : width;
-        const h = unit === 'percent' ? Math.round(currentHeight * height / 100) : height;
-        return ((w * h) / 1_000_000).toFixed(2);
-    })();
+    const newMp = ((targetWidth * targetHeight) / 1_000_000).toFixed(2);
 
     return (
         <Dialog
@@ -157,7 +162,7 @@ export const ResizeDialog: React.FC<ResizeDialogProps> = ({ open, imageModel, on
                         Текущий размер: {currentWidth} × {currentHeight} ({currentMp} Мп)
                     </Typography>
                     <Typography variant="body2">
-                        Новый размер: {unit === 'percent' ? `${width}% × ${height}%` : `${width} × ${height}`} ({newMp} Мп)
+                        Новый размер: {targetWidth} × {targetHeight} пикс. ({newMp} Мп)
                     </Typography>
 
                     <FormControl size="small" fullWidth sx={lightInputStyles}>
@@ -166,7 +171,7 @@ export const ResizeDialog: React.FC<ResizeDialogProps> = ({ open, imageModel, on
                             labelId="unit-label"
                             value={unit}
                             label="Единицы"
-                            onChange={(e) => setUnit(e.target.value as 'percent' | 'pixels')}
+                            onChange={(e) => handleUnitChange(e.target.value as 'percent' | 'pixels')}
                         >
                             <MenuItem value="pixels">Пиксели</MenuItem>
                             <MenuItem value="percent">Проценты</MenuItem>
@@ -175,24 +180,26 @@ export const ResizeDialog: React.FC<ResizeDialogProps> = ({ open, imageModel, on
 
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <TextField
-                            label="Ширина"
-                            value={width}
+                            label={unit === 'percent' ? 'Ширина (%)' : 'Ширина'}
+                            value={displayWidth}
                             onChange={(e) => handleWidthChange(Number(e.target.value))}
                             type="number"
                             size="small"
                             error={!!errors.width}
                             helperText={errors.width}
                             sx={lightInputStyles}
+                            slotProps={{ htmlInput: { min: 1, max: maxDim, step: 1 } }}
                         />
                         <TextField
-                            label="Высота"
-                            value={height}
+                            label={unit === 'percent' ? 'Высота (%)' : 'Высота'}
+                            value={displayHeight}
                             onChange={(e) => handleHeightChange(Number(e.target.value))}
                             type="number"
                             size="small"
                             error={!!errors.height}
                             helperText={errors.height}
                             sx={lightInputStyles}
+                            slotProps={{ htmlInput: { min: 1, max: maxDim, step: 1 } }}
                         />
                     </Box>
 
