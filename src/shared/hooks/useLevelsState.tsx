@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useEditorStore } from '@app/store/editorStore';
 import { applyLevelsToImageData } from '@shared/lib/utils/applyLevels';
 import { ImageModel } from '@entities/image/model';
@@ -12,13 +12,7 @@ export function useLevelsState(
     onApplyFinal: (newData: ImageData) => void
 ) {
     const maxValue = imageModel.metadata.colorDepth === 7 ? 127 : 255;
-
-    const {
-        setLevelsPreview,
-        clearLevelsPreview,
-        setMasterPreviewImageData,
-        clearMasterPreview,
-    } = useEditorStore();
+    const { setMasterPreviewImageData, clearMasterPreview } = useEditorStore();
 
     const [activeChannel, setActiveChannel] = useState('master');
     const [levels, setLevels] = useState<Record<string, { black: number; white: number; gamma: number }>>({});
@@ -45,7 +39,6 @@ export function useLevelsState(
                 result = applyLevelsToImageData(result, ch, levels[ch], maxValue);
             }
         });
-
         if (levels['master']) {
             result = applyLevelsToImageData(result, 'master', levels['master'], maxValue);
         }
@@ -54,32 +47,17 @@ export function useLevelsState(
 
     useEffect(() => {
         if (!open) return;
-        if (activeChannel === 'master') {
-            if (previewEnabled) {
-                const masterPreview = computeMasterPreview();
-                if (masterPreview) setMasterPreviewImageData(masterPreview);
-                clearLevelsPreview();
-            } else {
-                clearMasterPreview();
-            }
+        if (previewEnabled) {
+            const preview = computeMasterPreview();
+            if (preview) setMasterPreviewImageData(preview);
         } else {
             clearMasterPreview();
-            if (previewEnabled && levels[activeChannel]) {
-                setLevelsPreview({
-                    channel: activeChannel,
-                    levels: levels[activeChannel],
-                    maxValue,
-                });
-            } else {
-                clearLevelsPreview();
-            }
         }
-    }, [previewEnabled, levels, activeChannel, open, computeMasterPreview,
-        setLevelsPreview, clearLevelsPreview, setMasterPreviewImageData, clearMasterPreview, maxValue]);
+    }, [previewEnabled, computeMasterPreview, open, setMasterPreviewImageData, clearMasterPreview]);
 
     const current = levels[activeChannel] ?? defaultLevels(maxValue);
 
-    const handleChange = (black: number, white: number, gamma: number) => {
+    const handleChangeCommitted = (black: number, white: number, gamma: number) => {
         setLevels(prev => ({
             ...prev,
             [activeChannel]: { black, white, gamma },
@@ -96,16 +74,18 @@ export function useLevelsState(
     const handleApply = () => {
         const result = computeMasterPreview();
         if (result) {
-            clearLevelsPreview();
             clearMasterPreview();
             onApplyFinal(result);
         }
     };
 
     const handleCancel = () => {
-        clearLevelsPreview();
         clearMasterPreview();
     };
+
+    const previewImageData = useMemo(() => {
+        return computeMasterPreview() ?? imageModel.imageData;
+    }, [computeMasterPreview, imageModel.imageData, levels, previewEnabled]);
 
     return {
         activeChannel,
@@ -113,10 +93,11 @@ export function useLevelsState(
         current,
         previewEnabled,
         setPreviewEnabled,
-        handleChange,
+        handleChangeCommitted,
         handleReset,
         handleApply,
         handleCancel,
         maxValue,
+        previewImageData,
     };
 }

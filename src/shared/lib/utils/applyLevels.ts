@@ -1,4 +1,3 @@
-// src/shared/lib/levels/applyLevels.ts
 export function applyLevelsToImageData(
     src: ImageData,
     channel: 'master' | string,
@@ -7,6 +6,7 @@ export function applyLevelsToImageData(
 ): ImageData {
     const dst = new Uint8ClampedArray(src.data.length);
     dst.set(src.data);
+    const data = src.data;
 
     const { black, white, gamma } = levels;
     const safeBlack = Math.min(black, white - 1);
@@ -14,7 +14,6 @@ export function applyLevelsToImageData(
     const safeGamma = Math.max(0.1, Math.min(9.9, gamma));
     const range = safeWhite - safeBlack;
 
-    // Построим LUT для одного канала (0..maxValue)
     const lut = new Uint8Array(maxValue + 1);
     for (let i = 0; i <= maxValue; i++) {
         if (i <= safeBlack) lut[i] = 0;
@@ -26,26 +25,28 @@ export function applyLevelsToImageData(
         }
     }
 
-    // Применяем к нужным индексам
-    const applyToIndex = (idx: number) => {
-        for (let i = idx; i < src.data.length; i += 4) {
-            dst[i] = lut[src.data[i]];
+    const applyToChannel = (channelIdx: number) => {
+        for (let i = channelIdx; i < data.length; i += 4) {
+            const srcVal = data[i];
+            const scaled = Math.round((srcVal / 255) * maxValue);
+            const corrected = lut[Math.min(scaled, maxValue)];
+            dst[i] = Math.round((corrected / maxValue) * 255);
         }
     };
 
     if (channel === 'master') {
-        applyToIndex(0); // R
-        applyToIndex(1); // G
-        applyToIndex(2); // B
-        // Альфу не трогаем
-    } else if (channel === 'R') applyToIndex(0);
-    else if (channel === 'G') applyToIndex(1);
-    else if (channel === 'B') applyToIndex(2);
-    else if (channel === 'A' || channel === 'Alpha') applyToIndex(3);
-    else if (channel === 'Gray') {
-        applyToIndex(0);
-        applyToIndex(1);
-        applyToIndex(2);
+        applyToChannel(0);
+        applyToChannel(1);
+        applyToChannel(2);
+    } else if (channel === 'R') applyToChannel(0);
+    else if (channel === 'G') applyToChannel(1);
+    else if (channel === 'B') applyToChannel(2);
+    else if (channel === 'A' || channel === 'Alpha') {
+        applyToChannel(3);
+    } else if (channel === 'Gray') {
+        applyToChannel(0);
+        applyToChannel(1);
+        applyToChannel(2);
     }
 
     return new ImageData(dst, src.width, src.height);

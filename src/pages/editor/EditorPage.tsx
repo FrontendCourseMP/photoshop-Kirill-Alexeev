@@ -7,7 +7,7 @@ import { StatusBar } from '@widgets/status-bar/StatusBar';
 import { EyedropperInfo } from '@features/eyedropper/EyedropperInfo';
 import { LevelsDialog } from '@features/levels/LevelsDialog';
 import { ResizeDialog } from '@/features/resize/ResizeDialog';
-import { CanvasViewport } from '@features/canvas/CanvasViewPort';
+import { CanvasViewport } from '@/features/canvas/CanvasViewPort';
 import { DropZone } from '@features/drop-zone/DropZone';
 import { useImageActions } from '@shared/hooks/useImageActions';
 import { useToast } from '@shared/ui/ToastContext';

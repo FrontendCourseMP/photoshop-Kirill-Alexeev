@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Dialog, DialogTitle, DialogContent, Box, IconButton, Typography } from '@mui/material';
+import {
+    Dialog, DialogTitle, DialogContent, Box, IconButton, Typography
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { ImageModel } from '@entities/image/model';
 import { InputLevelsSliders } from './InputLevelsSliders';
@@ -54,11 +56,12 @@ export const LevelsDialog: React.FC<LevelsDialogProps> = ({ open, imageModel, on
         current,
         previewEnabled,
         setPreviewEnabled,
-        handleChange,
+        handleChangeCommitted,
         handleReset,
         handleApply,
         handleCancel,
         maxValue,
+        previewImageData,
     } = useLevelsState(open, imageModel, availableChannels, (newData) => {
         onApply(newData);
         onClose();
@@ -68,6 +71,8 @@ export const LevelsDialog: React.FC<LevelsDialogProps> = ({ open, imageModel, on
         handleCancel();
         onClose();
     };
+
+    const histogramSource = previewEnabled ? previewImageData : imageModel.imageData;
 
     return (
         <Dialog open={open} onClose={onDialogCancel} maxWidth={false}
@@ -85,11 +90,22 @@ export const LevelsDialog: React.FC<LevelsDialogProps> = ({ open, imageModel, on
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <ChannelSelect value={activeChannel} onChange={setActiveChannel} channels={availableChannels} />
 
-                    <Histogram imageData={imageModel.imageData} channel={activeChannel} maxValue={maxValue} logarithmic={logarithmic} />
+                    <Histogram
+                        imageData={histogramSource}
+                        channel={activeChannel}
+                        maxValue={maxValue}
+                        logarithmic={logarithmic}
+                    />
 
                     <LogarithmicCheckbox checked={logarithmic} onChange={setLogarithmic} />
 
-                    <InputLevelsSliders black={current.black} white={current.white} gamma={current.gamma} maxValue={maxValue} onChange={handleChange} />
+                    <InputLevelsSliders
+                        black={current.black}
+                        white={current.white}
+                        gamma={current.gamma}
+                        maxValue={maxValue}
+                        onChangeCommitted={handleChangeCommitted}
+                    />
 
                     <PreviewCheckbox checked={previewEnabled} onChange={setPreviewEnabled} />
                 </Box>
