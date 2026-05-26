@@ -9,9 +9,11 @@ interface ImageSidebarProps {
     imageModel: ImageModel;
     onImageLoaded: (model: ImageModel) => void;
     onError: (message: string) => void;
+    onLoadStart?: () => void;
+    onLoadEnd?: () => void;
 }
 
-export const ImageSidebar: React.FC<ImageSidebarProps> = ({ imageModel, onImageLoaded, onError }) => (
+export const ImageSidebar: React.FC<ImageSidebarProps> = ({ imageModel, onImageLoaded, onError, onLoadStart, onLoadEnd }) => (
     <Box
         sx={{
             position: 'fixed',
@@ -34,6 +36,8 @@ export const ImageSidebar: React.FC<ImageSidebarProps> = ({ imageModel, onImageL
             label="Загрузить другое"
             onImageLoaded={onImageLoaded}
             onError={(err) => onError(`Ошибка загрузки: ${err.message}`)}
+            onLoadStart={onLoadStart}
+            onLoadEnd={onLoadEnd}
         />
         <ChannelsPanel imageModel={imageModel} />
     </Box>

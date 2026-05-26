@@ -9,6 +9,7 @@ import { LevelsDialog } from '@features/levels/LevelsDialog';
 import { ResizeDialog } from '@/features/resize/ResizeDialog';
 import { CanvasViewport } from '@/features/canvas/CanvasViewPort';
 import { DropZone } from '@features/drop-zone/DropZone';
+import { LoaderOverlay } from '@shared/ui/LoaderOverlay';
 import { useImageActions } from '@shared/hooks/useImageActions';
 import { useToast } from '@shared/ui/ToastContext';
 import { useEditorStore } from '@app/store/editorStore';
@@ -33,40 +34,55 @@ export const EditorPage: React.FC = () => {
 
     const [showLevels, setShowLevels] = useState(false);
     const [showResize, setShowResize] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const { showToast } = useToast();
     const currentTool = useEditorStore(s => s.currentTool);
     const setEyedropperData = useEditorStore(s => s.setEyedropperData);
-
     const zoom = useEditorStore(s => s.zoom);
 
     const handleError = (message: string) => showToast(message, 'error');
 
-    const handleApplyLevels = (newImageData: ImageData) => {
+    // Применение уровней с лоадером
+    const handleApplyLevels = async (newImageData: ImageData) => {
         if (!imageModel) return;
-        const newModel = new ImageModel(imageModel.metadata, newImageData);
-        setImageModel(newModel);
-        setShowLevels(false);
-        showToast('Уровни применены', 'success');
+        setIsLoading(true);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 0));
+            const newModel = new ImageModel(imageModel.metadata, newImageData);
+            setImageModel(newModel);
+            setShowLevels(false);
+            showToast('Уровни применены', 'success');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleResized = (newModel: ImageModel) => {
-        setImageModel(newModel);
-        showToast('Размер изменён', 'success');
+    // Применение ресайза с лоадером
+    const handleResized = async (newModel: ImageModel) => {
+        setIsLoading(true);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 0));
+            setImageModel(newModel);
+            setShowResize(false);
+            showToast('Размер изменён', 'success');
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+    // Загрузка через любой DropZone (уже есть в useImageActions, но обернём лоадером)
+    const handleLoadStart = () => setIsLoading(true);
+    const handleLoadEnd = () => setIsLoading(false);
 
     const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
         if (currentTool !== 'eyedropper' || !imageModel) return;
         const canvas = e.currentTarget;
-
         const coords = getCanvasPixelCoords(canvas, e.clientX, e.clientY, zoom);
         if (!coords) return;
-
         const { x, y } = coords;
         const originalData = imageModel.imageData.data;
         const pixelIndex = (y * imageModel.metadata.width + x) * 4;
-
         if (pixelIndex < 0 || pixelIndex + 3 >= originalData.length) return;
-
         const r = originalData[pixelIndex];
         const g = originalData[pixelIndex + 1];
         const b = originalData[pixelIndex + 2];
@@ -76,6 +92,8 @@ export const EditorPage: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <LoaderOverlay open={isLoading} message="Пожалуйста, подождите..." />
+
             <AppHeader imageModel={imageModel} onClear={handleClearImage} />
             <LeftPanel onOpenLevels={() => setShowLevels(true)} onOpenResize={() => setShowResize(true)} />
 
@@ -84,6 +102,8 @@ export const EditorPage: React.FC = () => {
                     imageModel={imageModel}
                     onImageLoaded={handleImageLoaded}
                     onError={handleError}
+                    onLoadStart={handleLoadStart}
+                    onLoadEnd={handleLoadEnd}
                 />
             )}
 
@@ -113,6 +133,8 @@ export const EditorPage: React.FC = () => {
                         <DropZone
                             onImageLoaded={handleImageLoaded}
                             onError={(err) => handleError(`Ошибка загрузки: ${err.message}`)}
+                            onLoadStart={handleLoadStart}
+                            onLoadEnd={handleLoadEnd}
                         />
                     </Box>
                 )}

@@ -9,6 +9,8 @@ interface DropZoneProps {
     onError: (error: Error) => void;
     compact?: boolean;
     label?: string;
+    onLoadStart?: () => void;
+    onLoadEnd?: () => void;
 }
 
 export const DropZone: React.FC<DropZoneProps> = ({
@@ -16,6 +18,8 @@ export const DropZone: React.FC<DropZoneProps> = ({
     onError,
     compact = false,
     label = 'Перетащите изображение сюда',
+    onLoadStart,
+    onLoadEnd,
 }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +27,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
     const processFile = async (file: File) => {
         setIsLoading(true);
+        onLoadStart?.();
         try {
             const model = await loadImageFromFile(file);
             onImageLoaded(model);
@@ -31,6 +36,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
         } finally {
             setIsLoading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
+            onLoadEnd?.();
         }
     };
 
