@@ -6,9 +6,10 @@ import { APPBAR_HEIGHT, STATUSBAR_HEIGHT, TOOLS_WIDTH } from '@shared/constants/
 interface LeftPanelProps {
     onOpenLevels: () => void;
     onOpenResize: () => void;
+    onOpenFilters?: () => void;
 }
 
-export const LeftPanel: React.FC<LeftPanelProps> = ({ onOpenLevels, onOpenResize }) => (
+export const LeftPanel: React.FC<LeftPanelProps> = ({ onOpenLevels, onOpenResize, onOpenFilters }) => (
     <Box
         sx={{
             position: 'fixed',
@@ -23,6 +24,6 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ onOpenLevels, onOpenResize
             overflowY: 'auto',
         }}
     >
-        <ToolsPanel onOpenLevels={onOpenLevels} onOpenResize={onOpenResize} />
+        <ToolsPanel onOpenLevels={onOpenLevels} onOpenResize={onOpenResize} onOpenFilters={onOpenFilters} />
     </Box>
 );

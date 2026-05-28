@@ -22,6 +22,7 @@ import {
     TOOLS_WIDTH,
     CHANNELS_WIDTH,
 } from '@shared/constants/layout';
+import { FilterDialog } from '@/features/filters/FilterDialog';
 
 export const EditorPage: React.FC = () => {
     const {
@@ -34,6 +35,7 @@ export const EditorPage: React.FC = () => {
 
     const [showLevels, setShowLevels] = useState(false);
     const [showResize, setShowResize] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const { showToast } = useToast();
     const currentTool = useEditorStore(s => s.currentTool);
@@ -42,7 +44,6 @@ export const EditorPage: React.FC = () => {
 
     const handleError = (message: string) => showToast(message, 'error');
 
-    // Применение уровней с лоадером
     const handleApplyLevels = async (newImageData: ImageData) => {
         if (!imageModel) return;
         setIsLoading(true);
@@ -57,7 +58,6 @@ export const EditorPage: React.FC = () => {
         }
     };
 
-    // Применение ресайза с лоадером
     const handleResized = async (newModel: ImageModel) => {
         setIsLoading(true);
         try {
@@ -70,7 +70,20 @@ export const EditorPage: React.FC = () => {
         }
     };
 
-    // Загрузка через любой DropZone (уже есть в useImageActions, но обернём лоадером)
+    const handleApplyFilter = async (newImageData: ImageData) => {
+        if (!imageModel) return;
+        setIsLoading(true);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 0));
+            const newModel = new ImageModel(imageModel.metadata, newImageData);
+            setImageModel(newModel);
+            setShowFilters(false);
+            showToast('Фильтр применён', 'success');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleLoadStart = () => setIsLoading(true);
     const handleLoadEnd = () => setIsLoading(false);
 
@@ -95,7 +108,9 @@ export const EditorPage: React.FC = () => {
             <LoaderOverlay open={isLoading} message="Пожалуйста, подождите..." />
 
             <AppHeader imageModel={imageModel} onClear={handleClearImage} />
-            <LeftPanel onOpenLevels={() => setShowLevels(true)} onOpenResize={() => setShowResize(true)} />
+            <LeftPanel onOpenLevels={() => setShowLevels(true)}
+                onOpenResize={() => setShowResize(true)}
+                onOpenFilters={() => setShowFilters(true)} />
 
             {imageModel && (
                 <ImageSidebar
@@ -160,6 +175,15 @@ export const EditorPage: React.FC = () => {
                     imageModel={imageModel}
                     onResized={handleResized}
                     onClose={() => setShowResize(false)}
+                />
+            )}
+
+            {imageModel && (
+                <FilterDialog
+                    open={showFilters}
+                    imageModel={imageModel}
+                    onApply={handleApplyFilter}
+                    onClose={() => setShowFilters(false)}
                 />
             )}
         </Box>

@@ -22,6 +22,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     const zoom = useEditorStore((s) => s.zoom);
     const interpolationMethod = useEditorStore((s) => s.interpolationMethod);
     const currentTool = useEditorStore((s) => s.currentTool);
+    const filterPreview = useEditorStore(s => s.filterPreview);
 
     const filteredImageData = useMemo(() => {
         const src = imageModel.imageData.data;
@@ -51,6 +52,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     }, [imageModel, channelVisibility]);
 
     const finalImageData = useMemo(() => {
+        if (filterPreview) return filterPreview;
         if (masterPreviewImageData) return masterPreviewImageData;
         if (levelsPreview) {
             return applyLevelsToImageData(
@@ -61,7 +63,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             );
         }
         return filteredImageData;
-    }, [filteredImageData, levelsPreview, masterPreviewImageData]);
+    }, [filteredImageData, levelsPreview, masterPreviewImageData, filterPreview]);
 
     const scaledImageData = useMemo(() => {
         if (zoom === 100) return finalImageData;

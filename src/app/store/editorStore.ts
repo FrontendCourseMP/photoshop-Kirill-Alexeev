@@ -33,6 +33,7 @@ interface EditorState {
     zoom: number;
     interpolationMethod: InterpolationMethod;
     pan: { x: number; y: number };
+    filterPreview: ImageData | null;
 
     setCurrentTool: (tool: ToolType) => void;
     setChannelVisibility: (channel: string, visible: boolean) => void;
@@ -45,6 +46,8 @@ interface EditorState {
     setZoom: (zoom: number) => void;
     setInterpolationMethod: (method: InterpolationMethod) => void;
     setPan: (pan: { x: number; y: number }) => void;
+    setFilterPreview: (data: ImageData | null) => void;
+    clearFilterPreview: () => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -56,6 +59,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     zoom: 100,
     interpolationMethod: 'bilinear',
     pan: { x: 0, y: 0 },
+    filterPreview: null,
 
     setCurrentTool: (tool) => set({ currentTool: tool }),
     setChannelVisibility: (channel, visible) =>
@@ -78,4 +82,6 @@ export const useEditorStore = create<EditorState>((set) => ({
     setZoom: (zoom) => set({ zoom }),
     setInterpolationMethod: (method) => set({ interpolationMethod: method }),
     setPan: (pan) => set({ pan }),
+    setFilterPreview: (data) => set({ filterPreview: data }),
+    clearFilterPreview: () => set({ filterPreview: null }),
 }));
