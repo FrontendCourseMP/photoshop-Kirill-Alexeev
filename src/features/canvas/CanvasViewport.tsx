@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import { CanvasRenderer } from './CanvasRenderer';
 import { useEditorStore } from '@app/store/editorStore';
 import { ImageModel } from '@entities/image/model';
+import { useWheelZoom } from '@shared/hooks/useWheelZoom';
 
 interface CanvasViewportProps {
     imageModel: ImageModel;
@@ -17,6 +18,8 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({ imageModel, onCa
 
     const [isPanning, setIsPanning] = useState(false);
     const lastMousePos = useRef({ x: 0, y: 0 });
+
+    useWheelZoom(containerRef);
 
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
         if (currentTool !== 'hand') return;

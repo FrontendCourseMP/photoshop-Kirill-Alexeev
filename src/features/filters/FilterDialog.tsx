@@ -3,6 +3,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, Checkbox, FormControlLabel, Box, Typography, IconButton,
     Select, MenuItem, FormControl, InputLabel,
+    CircularProgress,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { ImageModel } from '@entities/image/model';
@@ -18,6 +19,8 @@ interface FilterDialogProps {
     imageModel: ImageModel;
     onApply: (newImageData: ImageData) => void;
     onClose: () => void;
+    onLoadStart?: () => void;
+    onLoadEnd?: () => void;
 }
 
 const dialogSx = {
@@ -56,12 +59,19 @@ const lightCheckboxStyles = {
     '&.Mui-checked': { color: '#ffffff' },
 };
 
-export const FilterDialog: React.FC<FilterDialogProps> = ({ open, imageModel, onApply, onClose }) => {
+export const FilterDialog: React.FC<FilterDialogProps> = ({
+    open,
+    imageModel,
+    onApply,
+    onClose,
+    onLoadStart,
+    onLoadEnd,
+}) => {
     const isGrayBit7 = imageModel.metadata.format === 'gb7';
-
-    const availableChannels = useMemo(() => {
-        return isGrayBit7 ? ['Gray'] : ['R', 'G', 'B'];
-    }, [isGrayBit7]);
+    const availableChannels = useMemo(
+        () => (isGrayBit7 ? ['Gray'] : ['R', 'G', 'B']),
+        [isGrayBit7]
+    );
 
     const [kernel, setKernel] = useState<number[][]>(predefinedKernels[0].matrix);
     const [kernelPreset, setKernelPreset] = useState<string>(predefinedKernels[0].name);
@@ -70,6 +80,7 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({ open, imageModel, on
     );
     const [edge, setEdge] = useState<EdgeHandling>('copy');
     const [previewEnabled, setPreviewEnabled] = useState(true);
+    const [isApplying, setIsApplying] = useState(false);
 
     const { setFilterPreview, clearFilterPreview } = useEditorStore();
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,13 +90,13 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({ open, imageModel, on
             if (debounceTimer.current) clearTimeout(debounceTimer.current);
             clearFilterPreview();
         };
-    }, []);
+    }, [clearFilterPreview]);
 
     useEffect(() => {
         if (!open) {
             clearFilterPreview();
         }
-    }, [open]);
+    }, [open, clearFilterPreview]);
 
     const requestPreview = useCallback(() => {
         if (!open || !previewEnabled) {
@@ -95,13 +106,27 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({ open, imageModel, on
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         debounceTimer.current = setTimeout(async () => {
             try {
-                const result = await convolveAsync(imageModel.imageData, kernel, selectedChannels, edge);
+                const result = await convolveAsync(
+                    imageModel.imageData,
+                    kernel,
+                    selectedChannels,
+                    edge
+                );
                 setFilterPreview(result);
             } catch (err) {
                 console.error('Filter preview error:', err);
             }
         }, 100);
-    }, [open, previewEnabled, imageModel, kernel, selectedChannels, edge, setFilterPreview, clearFilterPreview]);
+    }, [
+        open,
+        previewEnabled,
+        imageModel,
+        kernel,
+        selectedChannels,
+        edge,
+        setFilterPreview,
+        clearFilterPreview,
+    ]);
 
     useEffect(() => {
         requestPreview();
@@ -119,6 +144,7 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({ open, imageModel, on
         const newMatrix = kernel.map(r => [...r]);
         newMatrix[row][col] = value;
         setKernel(newMatrix);
+
         const match = predefinedKernels.find(k =>
             k.matrix.every((r, ri) => r.every((val, ci) => newMatrix[ri][ci] === val))
         );
@@ -126,11 +152,23 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({ open, imageModel, on
     };
 
     const handleApply = async () => {
-        const channelsToApply = isGrayBit7 ? ['Gray'] : selectedChannels;
-        const result = await convolveAsync(imageModel.imageData, kernel, channelsToApply, edge);
-        clearFilterPreview();
-        onApply(result);
-        onClose();
+        setIsApplying(true);
+        onLoadStart?.();
+        try {
+            const channelsToApply = isGrayBit7 ? ['Gray'] : selectedChannels;
+            const result = await convolveAsync(
+                imageModel.imageData,
+                kernel,
+                channelsToApply,
+                edge
+            );
+            clearFilterPreview();
+            onApply(result);
+            onClose();
+        } finally {
+            setIsApplying(false);
+            onLoadEnd?.();
+        }
     };
 
     const handleReset = () => {
@@ -144,12 +182,35 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({ open, imageModel, on
         onClose();
     };
 
+    const selectItems = useMemo(() => {
+        const items = predefinedKernels.map(k => k.name);
+        if (kernelPreset === 'Пользовательский') {
+            items.unshift('Пользовательский');
+        }
+        return items;
+    }, [kernelPreset]);
+
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth={false}
-            hideBackdrop disableScrollLock disableEnforceFocus disableAutoFocus disableRestoreFocus
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth={false}
+            hideBackdrop
+            disableScrollLock
+            disableEnforceFocus
+            disableAutoFocus
+            disableRestoreFocus
             sx={dialogSx}
         >
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1, px: 2 }}>
+            <DialogTitle
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    py: 1,
+                    px: 2,
+                }}
+            >
                 <Typography variant="subtitle1">Фильтры</Typography>
                 <IconButton size="small" onClick={handleClose}>
                     <CloseIcon fontSize="inherit" />
@@ -163,10 +224,20 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({ open, imageModel, on
                         <Select
                             value={kernelPreset}
                             label="Ядро"
-                            onChange={(e) => handlePresetChange(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === 'Пользовательский') return;
+                                handlePresetChange(val);
+                            }}
                         >
-                            {predefinedKernels.map(k => (
-                                <MenuItem key={k.name} value={k.name}>{k.name}</MenuItem>
+                            {selectItems.map(name => (
+                                <MenuItem
+                                    key={name}
+                                    value={name}
+                                    disabled={name === 'Пользовательский'}
+                                >
+                                    {name}
+                                </MenuItem>
                             ))}
                         </Select>
                     </FormControl>
@@ -175,7 +246,9 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({ open, imageModel, on
 
                     {!isGrayBit7 && (
                         <>
-                            <Typography variant="caption">Применить к каналам:</Typography>
+                            <Typography variant="caption">
+                                Применить к каналам:
+                            </Typography>
                             <ChannelCheckboxes
                                 channels={availableChannels}
                                 selected={selectedChannels}
@@ -195,21 +268,47 @@ export const FilterDialog: React.FC<FilterDialogProps> = ({ open, imageModel, on
                                 sx={lightCheckboxStyles}
                             />
                         }
-                        label={<Typography variant="caption">Предпросмотр</Typography>}
+                        label={
+                            <Typography variant="caption">Предпросмотр</Typography>
+                        }
                     />
                 </Box>
             </DialogContent>
 
             <DialogActions sx={{ px: 2, pb: 1.5, justifyContent: 'space-between' }}>
-                <Button onClick={handleReset} size="small" variant="outlined" color="inherit" sx={{ textTransform: 'none' }}>
+                <Button
+                    onClick={handleReset}
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    sx={{ textTransform: 'none' }}
+                >
                     Сброс
                 </Button>
-                <Box>
-                    <Button onClick={handleClose} size="small" color="inherit" sx={{ mr: 1, textTransform: 'none' }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                        onClick={handleClose}
+                        size="small"
+                        color="inherit"
+                        sx={{ textTransform: 'none' }}
+                    >
                         Отмена
                     </Button>
-                    <Button variant="contained" size="small" onClick={handleApply} sx={{ textTransform: 'none' }}>
-                        Применить
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={handleApply}
+                        disabled={isApplying}
+                        sx={{ textTransform: 'none', minWidth: 130 }}
+                    >
+                        {isApplying ? (
+                            <>
+                                <CircularProgress size={18} sx={{ mr: 1, color: 'inherit' }} />
+                                Применяем...
+                            </>
+                        ) : (
+                            'Применить'
+                        )}
                     </Button>
                 </Box>
             </DialogActions>

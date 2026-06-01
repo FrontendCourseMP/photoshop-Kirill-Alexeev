@@ -6,21 +6,23 @@ interface KernelGridProps {
     onChange: (row: number, col: number, value: number) => void;
 }
 
-export const KernelGrid: React.FC<KernelGridProps> = ({ matrix, onChange }) => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-        {matrix.map((row, ri) => (
-            <Box key={ri} sx={{ display: 'flex', gap: 0.5 }}>
-                {row.map((val, ci) => (
-                    <TextField
-                        key={`${ri}-${ci}`}
-                        size="small"
-                        type="number"
-                        value={val}
-                        onChange={(e) => onChange(ri, ci, Number(e.target.value))}
-                        sx={{ width: 60 }}
-                    />
-                ))}
-            </Box>
-        ))}
-    </Box>
-);
+export const KernelGrid: React.FC<KernelGridProps> = ({ matrix, onChange }) => {
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {matrix.map((row, ri) => (
+                <Box key={ri} sx={{ display: 'flex', gap: 1 }}>
+                    {row.map((val, ci) => (
+                        <TextField
+                            key={`${ri}-${ci}`}
+                            size="small"
+                            type="number"
+                            value={val}
+                            onChange={(e) => onChange(ri, ci, Number(e.target.value))}
+                            sx={{ flex: 1, minWidth: 0 }}
+                        />
+                    ))}
+                </Box>
+            ))}
+        </Box>
+    );
+};

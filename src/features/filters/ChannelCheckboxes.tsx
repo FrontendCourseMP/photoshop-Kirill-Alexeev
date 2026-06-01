@@ -26,7 +26,10 @@ export const ChannelCheckboxes: React.FC<ChannelCheckboxesProps> = ({ channels, 
                             size="small"
                             checked={selected.includes(ch)}
                             onChange={() => toggle(ch)}
-                            sx={{ color: 'grey.500', '&.Mui-checked': { color: 'primary.light' } }}
+                            sx={{
+                                color: '#bdbdbd',
+                                '&.Mui-checked': { color: '#ffffff' },
+                            }}
                         />
                     }
                     label={<Typography variant="caption">{ch}</Typography>}
